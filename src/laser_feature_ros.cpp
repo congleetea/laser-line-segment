@@ -1,6 +1,7 @@
 #include "laserline/laser_feature_ros.h"
 #include "sys/time.h"
-
+#include <string>
+#include <iostream>
 //FILE *fpd = fopen("data.txt","w+");
 namespace line_feature
 {
@@ -15,6 +16,7 @@ LaserFeatureROS::LaserFeatureROS(ros::NodeHandle& nh, ros::NodeHandle& nh_local)
 	if(show_lines_)
 	{
 		marker_publisher_ = nh_.advertise<visualization_msgs::Marker>("publish_line_markers", 1);
+		index_publisher_ = nh_.advertise<visualization_msgs::MarkerArray>("publish_line_name", 1);
 	}
 	ros::spin();
 }
@@ -65,7 +67,10 @@ void LaserFeatureROS::scanValues(const sensor_msgs::LaserScan::ConstPtr &scan_ms
 
 void LaserFeatureROS::publishMarkerMsg(const std::vector<gline> &m_gline,visualization_msgs::Marker &marker_msg)
 {
-	marker_msg.ns = "line_extraction";
+  visualization_msgs::MarkerArray index_marker_msg;
+  index_marker_msg.markers.clear();
+  
+    marker_msg.ns = "line_extraction";
 	marker_msg.id = 0;
 	marker_msg.type = visualization_msgs::Marker::LINE_LIST;
 	marker_msg.scale.x = 0.1;
@@ -73,8 +78,12 @@ void LaserFeatureROS::publishMarkerMsg(const std::vector<gline> &m_gline,visuali
 	marker_msg.color.g = 0.0;
 	marker_msg.color.b = 0.0;
 	marker_msg.color.a = 1.0;
-  
-
+    visualization_msgs::Marker marker;
+    marker.action = visualization_msgs::Marker::DELETEALL;
+    index_marker_msg.markers.push_back(marker);
+    index_publisher_.publish(index_marker_msg);
+    index_marker_msg.markers.clear();
+    int index = 0;
 	for (std::vector<gline>::const_iterator cit = m_gline.begin(); cit != m_gline.end(); ++cit)
 	{
 		geometry_msgs::Point p_start;
@@ -87,9 +96,41 @@ void LaserFeatureROS::publishMarkerMsg(const std::vector<gline> &m_gline,visuali
 	    p_end.y = cit->y2;
 	    p_end.z = 0;
 	    marker_msg.points.push_back(p_end);
+
+        visualization_msgs::Marker marker1;
+        visualization_msgs::Marker marker2;
+        marker1.header.frame_id = frame_id_;
+        marker1.header.stamp = ros::Time::now();
+        marker1.ns = "line_extraction";
+        marker1.id = index;
+        marker1.action = visualization_msgs::Marker::ADD;
+        marker1.type = visualization_msgs::Marker::TEXT_VIEW_FACING;
+        marker1.text = std::to_string(index); 
+        marker1.pose.position = p_start;
+        marker1.scale.x = 3.6;
+        marker1.scale.y = 3.6;
+        marker1.scale.z = 0.1;
+        marker1.color.b = marker1.color.a = 1;
+        index_marker_msg.markers.push_back(marker1);
+        index++;
+        marker2.header.frame_id = frame_id_;
+        marker2.header.stamp = ros::Time::now();
+        marker2.ns = "line_extraction";
+        marker2.id = index;
+        marker2.action = visualization_msgs::Marker::ADD;
+        marker2.type = visualization_msgs::Marker::TEXT_VIEW_FACING;
+        marker2.text = std::to_string(index); 
+        marker2.pose.position = p_end;
+        marker2.scale.x = 3.6;
+        marker2.scale.y = 3.6;
+        marker2.scale.z = 0.1;
+        marker2.color.b = marker2.color.a = 1;
+        index_marker_msg.markers.push_back(marker2);
+        index++;
 	}
     marker_msg.header.frame_id = frame_id_; 
 	marker_msg.header.stamp = ros::Time::now();
+    index_publisher_.publish(index_marker_msg);
 }
 
 

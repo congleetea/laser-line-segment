@@ -12,6 +12,7 @@ mobile robot pose from laser
 #include <ros/ros.h>
 #include <sensor_msgs/LaserScan.h>
 #include <visualization_msgs/Marker.h>
+#include <visualization_msgs/MarkerArray.h>
 #include <geometry_msgs/Point.h>
 #include "laserline/line_feature.h"
 
@@ -57,6 +58,7 @@ class LaserFeatureROS
   		ros::Subscriber scan_subscriber_;
   		ros::Publisher line_publisher_;
   		ros::Publisher marker_publisher_;
+  		ros::Publisher index_publisher_;
 };
 
 }
